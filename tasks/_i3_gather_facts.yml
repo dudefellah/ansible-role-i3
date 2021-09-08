@@ -1,0 +1,38 @@
+---
+- name: Find user home directory
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ i3_user }}"
+
+# If we don't find a configured vars value for the i3_packages value, we'll give
+# back a list with a single package called ["_unsupported"] which will hopefully
+# prevent a run of this role on platforms that haven't been configured/tested
+- name: Set installable packages list
+  set_fact:
+    _i3_packages: >-
+      {%- if i3_packages is not none -%}
+      {{ i3_packages }}
+      {%- elif (
+        (ansible_distribution in __i3_packages)
+        and (ansible_distribution_major_version|int in __i3_packages[ansible_distribution])
+      ) -%}
+      {{ __i3_packages[ansible_distribution][ansible_distribution_major_version|int] }}
+      {%- elif (
+        (ansible_distribution in __i3_packages)
+        and ("default" in __i3_packages[ansible_distribution])
+      ) -%}
+      {{ __i3_packages[ansible_distribution]["default"] }}
+      {%- else -%}
+      ["__unsupported"]
+      {%- endif -%}
+
+- name: Set the destination config file path
+  set_fact:
+    _i3_config_path: >-
+      {%- if i3_config_path is none -%}
+        {{ none }}
+      {%- elif i3_config_path.startswith('/') -%}
+        {{ i3_config_path }}
+      {%- else -%}
+        {{ ansible_facts.getent_passwd[i3_user][4] }}/{{ i3_config_path }}
+      {%- endif -%}

@@ -1,0 +1,15 @@
+---
+- hosts: all
+  tasks:
+    - name: Add the i3 user group
+      ansible.builtin.group:
+        name: dan
+
+    - name: Add the i3 user
+      ansible.builtin.user:
+        name: dan
+        group: dan
+
+    - name: Update the package cache
+      ansible.builtin.package:
+        update_cache: true

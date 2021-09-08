@@ -1,0 +1,8 @@
+---
+# handlers file for ansible-role-i3
+- name: Reload i3
+  command: "{{ i3_reload_command }}"
+  listen: "i3 reload"
+  when:
+    - "i3_reload_enabled|bool"
+    - "i3_reload_command is not none"

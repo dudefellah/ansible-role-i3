@@ -1,0 +1,12 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: "Include ansible-role-i3"
+      include_role:
+        name: "ansible-role-i3"
+      vars:
+        i3_user: dan
+        i3_group: dan
+        i3_install_epel: true
+        i3_reload_enabled: false

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+
+{%- if i3_config_contents is string %}
+{{ i3_config_contents }}
+{%- elif (
+        (i3_config_contents is iterable)
+        and (i3_config_contents is not mapping)
+    ) %}
+{% for _i3_conf in i3_config_contents %}
+{{ _i3_conf }}
+{% endfor %}
+{%- endif %}

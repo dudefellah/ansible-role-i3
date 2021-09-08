@@ -1,0 +1,62 @@
+---
+# tasks file for ansible-role-i3
+- name: Gather role facts
+  include_tasks: _i3_gather_facts.yml
+
+- name: Install EPEL for CentOS
+  ansible.builtin.package:
+    name: "epel-release"
+    state: present
+    update_cache: true
+  when:
+    - "ansible_distribution == 'CentOS'"
+    - "i3_install_epel"
+
+- name: Install packages
+  ansible.builtin.package:
+    name: "{{ _i3_packages }}"
+    state: present
+
+- name: Give an error if we've set the config path, but not the i3_user
+  fail:
+    msg: >-
+      No `i3_user` was set, though the config path was set. You must set either
+      all of the i3_user, i3_group and i3_config_path, or unset the
+      i3_config_path so that this role doesn't try to install a custom i3 config
+      file.
+  when:
+    - >-
+      (
+        (i3_user is none)
+        or (i3_group is none)
+      )
+    - "i3_config_path is not none"
+
+# We did getent for passwd in _i3_gather_facts.yml
+- name: Create the config path
+  file:
+    path: "{{ _i3_config_path | dirname }}"
+    state: directory
+    owner: "{{ i3_user }}"
+    group: "{{ i3_group }}"
+    mode: "0700"
+  when:
+    - >-
+      (
+        _i3_config_path | dirname
+      ).startswith(
+        ansible_facts.getent_passwd[i3_user][4]
+      )
+
+- name: Install the i3 config
+  ansible.builtin.template:
+    src: config.j2
+    dest: "{{ _i3_config_path }}"
+    owner: "{{ i3_user }}"
+    group: "{{ i3_group }}"
+    mode: "0600"
+    validate: "{{ i3_config_validation_command | default(omit) }}"
+  notify:
+    - "i3 reload"
+  when:
+    - "i3_config_path is not none"

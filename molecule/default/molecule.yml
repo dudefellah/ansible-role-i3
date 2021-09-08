@@ -1,0 +1,27 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint .
+  ansible-lint .
+platforms:
+  - name: centos-7-i3
+    image: centos:centos7
+  - name: debian-10-i3
+    image: debian:buster-slim
+  - name: debian-11-i3
+    image: debian:bullseye-slim
+  - name: ubuntu-2004-i3
+    image: ubuntu:20.04
+  - name: ubuntu-2010-i3
+    image: ubuntu:20.10
+  - name: ubuntu-2104-i3
+    image: ubuntu:21.04
+provisioner:
+  name: ansible
+  prepare: prepare.yml
+verifier:
+  name: testinfra
